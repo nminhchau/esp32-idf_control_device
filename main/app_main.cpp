@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <iostream>
 
 
 #include "freertos/FreeRTOS.h"
@@ -65,15 +66,18 @@ void btn_init(void){
 }
 
 void open_door(){
+    ESP_LOGI(TAG, "Open door function was called!");
     if (device.door_state){
         gpio_set_level(LED1, OFF);
         gpio_set_level(LED2, ON);
         gpio_set_level(DOOR, ON);
+        ESP_LOGI(TAG, "door_state = TRUE");
     }
     else{
         gpio_set_level(LED1, ON);
         gpio_set_level(LED2, OFF);
         gpio_set_level(DOOR, OFF);
+        ESP_LOGI(TAG, "door_state = FALSE");
     }
 }
 
@@ -84,38 +88,41 @@ void state_init(){
 
 void open_task(void *arg){
     btn_init();
-    // state_init();
     while (1){
         while (device.emergency_state){
+            // ESP_LOGI(TAG, "emergency state: %s", device.emergency_state ? "true" : "false");
             device.door_state = true;
             open_door();
         }
         if (!gpio_get_level(BUTTON1)){
             device.door_state = true;
-           
+            open_door();
+            vTaskDelay(3000/portTICK_PERIOD_MS);
         }
         else{
             device.door_state = false;
+            open_door();
         }
-        open_door();
-        vTaskDelay(3000/portTICK_PERIOD_MS);
+        vTaskDelay(50/portTICK_PERIOD_MS);
     }
 }
 
 void emercency_task(void *arg){
     btn_init();
-    // state_init();
     while(1){
         if (!gpio_get_level(BUTTON2)){
             device.emergency_state = true;
+            ESP_LOGI(TAG, "emer: %s", device.emergency_state ? "T" : "F");
+
             gpio_set_level(BUZZER, ON);
         }
         else{
             gpio_set_level(BUZZER, OFF);
         }
-        vTaskDelay(50/portTICK_PERIOD_MS);
+        vTaskDelay(500/portTICK_PERIOD_MS);
     }
 }
+
 
 
 void socket_task(void *arg){
@@ -163,6 +170,16 @@ void socket_task(void *arg){
                 rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
                 ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
                 ESP_LOGI(TAG, "%s", rx_buffer);
+                if (strcmp(std::to_string(rx_buffer), "1"))
+                {
+                    device.door_state = true;
+                    open_door();
+                }
+                else
+                {
+                    device.door_state = false;
+                    open_door();
+                }        
             }
             vTaskDelay(1000/portTICK_PERIOD_MS);
         }
@@ -188,6 +205,7 @@ extern "C"  void app_main(){
     param.WN="1B KMT";
     param.WP="a1234567";
     state_init();
+    ESP_LOGI(TAG, "emer: %s", device.emergency_state ? "T" : "F");
 
     //wifi
     if(wifi_init_sta()){
