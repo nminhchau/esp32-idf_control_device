@@ -5,14 +5,14 @@
 #include "esp_log.h"
 
 
-#define BUTTON1     GPIO_NUM_34
-#define BUTTON2     GPIO_NUM_14
+#define DOOR_BUTTON             GPIO_NUM_18
+#define EMERGENCY_BUTTON        GPIO_NUM_19
 
-#define LED1        GPIO_NUM_19
-#define LED2        GPIO_NUM_18
+#define CLOSE_LED               GPIO_NUM_25
+#define OPEN_LED                GPIO_NUM_26
 
-#define DOOR        GPIO_NUM_23
-#define BUZZER      GPIO_NUM_22
+#define DOOR                    GPIO_NUM_27
+#define BUZZER                  GPIO_NUM_14
 
 #define ON            0
 #define OFF           1
@@ -21,7 +21,8 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
     char* WN;
     char* WP;
 } param_t; 
@@ -30,11 +31,11 @@ param_t param;
 
 typedef struct
 {
-    bool door_state;
-    bool emergency_state;
-}device_t;
+    bool door;
+    bool emergency;
+}state_t;
 
-device_t device;
+state_t state;
 
 #ifdef __cplusplus
 }
