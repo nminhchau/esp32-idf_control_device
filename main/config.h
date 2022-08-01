@@ -8,10 +8,10 @@
 #define DOOR_BUTTON             GPIO_NUM_19
 #define EMERGENCY_BUTTON        GPIO_NUM_18
 
-#define CLOSE_LED               GPIO_NUM_25
+#define CLOSE_LED               GPIO_NUM_27
 #define OPEN_LED                GPIO_NUM_26
 
-#define DOOR                    GPIO_NUM_27
+#define DOOR                    GPIO_NUM_25
 #define BUZZER                  GPIO_NUM_21
 
 #define ON            0

@@ -65,11 +65,10 @@ void open_door()
   gpio_set_level(CLOSE_LED, OFF);
   gpio_set_level(OPEN_LED, ON);
   gpio_set_level(DOOR, ON);
-
-  ESP_LOGI("DOOR is OPEN! Door_state","%d", state.door);
-  ESP_LOGI("DOOR_BUTTON", "%d", gpio_get_level(DOOR_BUTTON));
+  ESP_LOGI("DOOR is OPEN! Door_state", "%d", state.door);
+  // ESP_LOGI("DOOR_BUTTON", "%d", gpio_get_level(DOOR_BUTTON));
   vTaskDelay(3000/portTICK_PERIOD_MS);
-  state.door = false;
+  // state.door = false;
 }
 
 void close_door()
@@ -88,12 +87,11 @@ void control(void *arg)
   {
     while(state.emergency == true)
     {
-      state.door = true;
       gpio_set_level(CLOSE_LED, OFF);
       gpio_set_level(OPEN_LED, ON);
       gpio_set_level(DOOR, ON);
       gpio_set_level(BUZZER, 1);
-      ESP_LOGI("DOOR is OPEN with emergency mode! Door_state","%d", state.door);
+      ESP_LOGI("DOOR is OPEN with emergency mode! Door_state", "%d", state.door);
       ESP_LOGI("EMERGENCY_BUTTON", "%d", gpio_get_level(EMERGENCY_BUTTON));
       vTaskDelay(100/portTICK_PERIOD_MS);
     }
@@ -129,6 +127,10 @@ void setState(void *arg)
     if(gpio_get_level(DOOR_BUTTON) == 0)
     {
       state.door = true;
+    }
+    else
+    {
+      state.door = false;
     }
     vTaskDelay(400/portTICK_PERIOD_MS);
   }  
@@ -169,6 +171,7 @@ void socket_task(void *arg)
 
     while (1)
     {
+      char tmpStr[9] = "Welcome!";
       ESP_LOGE("RX_BUFFER", "%s", rx_buffer);
       int err = send(sock, payload, strlen(payload), 0);
       if (err < 0)
@@ -190,14 +193,18 @@ void socket_task(void *arg)
         rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
         ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
         ESP_LOGI(TAG, "%s", rx_buffer);
-        if (len == 8)
+        if (strcmp(rx_buffer, tmpStr) == 0)
         {
+          ESP_LOGI("COMPARE", "rx_buffer equal tmpStr!!!!");
           state.door = true;
+          ESP_LOGI("COMPARE", "door state is %d", state.door);
         }
         else
         {
+          ESP_LOGI("COMPARE", "rx_buffer don't equal tmpStr!!!!");
           state.door = false;
-        }    
+          ESP_LOGI("COMPARE", "door state is %d", state.door);
+        } 
       }
     }
 
@@ -212,7 +219,7 @@ void socket_task(void *arg)
 }
 extern "C"  void app_main()
 {
-  ESP_LOGI(TAG, "[APP] Startup..");
+  ESP_LOGI(TAG, "[APP] Startup...");
   ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
   ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
 
@@ -231,7 +238,7 @@ extern "C"  void app_main()
   //wifi
   if(wifi_init_sta())
   {
-    xTaskCreate(&socket_task, "socket_task", 9216, NULL, 3, NULL);
+    xTaskCreate(&socket_task, "socket_task", 1024*9, NULL, 2, NULL);
     xTaskCreate(&setState, "set_state_task", 1024*2, NULL, 2, NULL);
     xTaskCreate(&control, "control_task", 1024*2, NULL, 2, NULL);
   }
