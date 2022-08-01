@@ -65,10 +65,11 @@ void open_door()
   gpio_set_level(CLOSE_LED, OFF);
   gpio_set_level(OPEN_LED, ON);
   gpio_set_level(DOOR, ON);
-  state.door = true;
+
   ESP_LOGI("DOOR is OPEN! Door_state","%d", state.door);
   ESP_LOGI("DOOR_BUTTON", "%d", gpio_get_level(DOOR_BUTTON));
   vTaskDelay(3000/portTICK_PERIOD_MS);
+  state.door = false;
 }
 
 void close_door()
@@ -87,11 +88,11 @@ void control(void *arg)
   {
     while(state.emergency == true)
     {
+      state.door = true;
       gpio_set_level(CLOSE_LED, OFF);
       gpio_set_level(OPEN_LED, ON);
       gpio_set_level(DOOR, ON);
       gpio_set_level(BUZZER, 1);
-      state.door = true;
       ESP_LOGI("DOOR is OPEN with emergency mode! Door_state","%d", state.door);
       ESP_LOGI("EMERGENCY_BUTTON", "%d", gpio_get_level(EMERGENCY_BUTTON));
       vTaskDelay(100/portTICK_PERIOD_MS);
@@ -101,11 +102,10 @@ void control(void *arg)
     {
       open_door();
     }
-    else if (state.door == false)
+    else
     {
       close_door();
     }
-    
   }  
 }
 
@@ -125,6 +125,10 @@ void setState(void *arg)
         state.emergency = true;
       }
       ESP_LOGI("Emergency state is", "%d", state.emergency);
+    }
+    if(gpio_get_level(DOOR_BUTTON) == 0)
+    {
+      state.door = true;
     }
     vTaskDelay(400/portTICK_PERIOD_MS);
   }  
@@ -188,11 +192,11 @@ void socket_task(void *arg)
         ESP_LOGI(TAG, "%s", rx_buffer);
         if (len == 8)
         {
-          open_door();
+          state.door = true;
         }
         else
         {
-          close_door();
+          state.door = false;
         }    
       }
     }

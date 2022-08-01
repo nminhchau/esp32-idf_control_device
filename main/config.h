@@ -5,14 +5,14 @@
 #include "esp_log.h"
 
 
-#define DOOR_BUTTON             GPIO_NUM_18
-#define EMERGENCY_BUTTON        GPIO_NUM_19
+#define DOOR_BUTTON             GPIO_NUM_19
+#define EMERGENCY_BUTTON        GPIO_NUM_18
 
 #define CLOSE_LED               GPIO_NUM_25
 #define OPEN_LED                GPIO_NUM_26
 
 #define DOOR                    GPIO_NUM_27
-#define BUZZER                  GPIO_NUM_14
+#define BUZZER                  GPIO_NUM_21
 
 #define ON            0
 #define OFF           1
